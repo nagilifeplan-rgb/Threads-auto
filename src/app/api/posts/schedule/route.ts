@@ -33,6 +33,7 @@ export async function POST(req: NextRequest) {
       scheduledAt: scheduled.toISOString(),
       status: 'pending' as const,
       mediaUrls: Array.isArray(mediaUrls) ? mediaUrls : [],
+      source: 'manual' as const,
       createdAt: now,
       updatedAt: now,
     };
