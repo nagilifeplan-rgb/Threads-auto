@@ -62,6 +62,21 @@ export default function Home() {
 
   useEffect(() => { fetchAuth(); fetchPosts(); }, [fetchAuth, fetchPosts]);
 
+  // OAuthコールバック後のクエリパラメータを処理
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('success') === '1') {
+      const u = params.get('username');
+      // 軽いトースト代わり（NotificationCenterで処理されないため自前）
+      setTimeout(() => {
+        alert(`✅ Threadsに接続しました${u ? ` (@${u})` : ''}`);
+      }, 100);
+      window.history.replaceState({}, '', '/');
+      fetchAuth();
+    }
+  }, [fetchAuth]);
+
   // Auto-refresh every 30s
   useEffect(() => {
     const id = setInterval(fetchPosts, 30_000);
