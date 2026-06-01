@@ -38,3 +38,17 @@ export interface ParsedSpreadsheet {
   validCount: number;
   errorCount: number;
 }
+
+// ---- Note article (下書き) ----
+
+/** note記事の下書き。実投稿はnoteエディタにコピーして手動で行う */
+export interface NoteArticle {
+  id: string;
+  title: string;
+  body: string;
+  tags: string[];
+  threadsDraft?: string;     // AI が生成した Threads 用テキスト
+  threadsPostedId?: string;  // Threads にスケジュール／投稿した時の ScheduledPost.id
+  createdAt: string;
+  updatedAt: string;
+}
