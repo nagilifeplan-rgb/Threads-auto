@@ -3,12 +3,20 @@
  */
 import fs from 'fs';
 import path from 'path';
-import { ScheduledPost, ThreadsConfig, NoteArticle } from '@/types';
+import {
+  ScheduledPost,
+  ThreadsConfig,
+  NoteArticle,
+  AppNotification,
+  PostInsights,
+} from '@/types';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const POSTS_FILE = path.join(DATA_DIR, 'posts.json');
 const CONFIG_FILE = path.join(DATA_DIR, 'config.json');
 const NOTES_FILE = path.join(DATA_DIR, 'notes.json');
+const NOTIFICATIONS_FILE = path.join(DATA_DIR, 'notifications.json');
+const INSIGHTS_FILE = path.join(DATA_DIR, 'insights.json');
 
 function ensureDir() {
   if (!fs.existsSync(DATA_DIR)) {
@@ -123,4 +131,86 @@ export function deleteNote(id: string): boolean {
 
 export function getNote(id: string): NoteArticle | undefined {
   return loadNotes().find((n) => n.id === id);
+}
+
+// ---------- Notifications ----------
+
+const MAX_NOTIFICATIONS = 100;
+
+export function loadNotifications(): AppNotification[] {
+  ensureDir();
+  if (!fs.existsSync(NOTIFICATIONS_FILE)) return [];
+  try {
+    return JSON.parse(fs.readFileSync(NOTIFICATIONS_FILE, 'utf-8'));
+  } catch {
+    return [];
+  }
+}
+
+export function saveNotifications(items: AppNotification[]): void {
+  ensureDir();
+  fs.writeFileSync(NOTIFICATIONS_FILE, JSON.stringify(items, null, 2));
+}
+
+export function addNotification(n: AppNotification): void {
+  const items = loadNotifications();
+  items.unshift(n);
+  // Keep only the latest N
+  saveNotifications(items.slice(0, MAX_NOTIFICATIONS));
+}
+
+export function markNotificationRead(id: string): boolean {
+  const items = loadNotifications();
+  const idx = items.findIndex((n) => n.id === id);
+  if (idx === -1) return false;
+  items[idx].read = true;
+  saveNotifications(items);
+  return true;
+}
+
+export function markAllNotificationsRead(): void {
+  const items = loadNotifications();
+  items.forEach((n) => (n.read = true));
+  saveNotifications(items);
+}
+
+export function deleteNotification(id: string): boolean {
+  const items = loadNotifications();
+  const next = items.filter((n) => n.id !== id);
+  if (next.length === items.length) return false;
+  saveNotifications(next);
+  return true;
+}
+
+export function clearAllNotifications(): void {
+  saveNotifications([]);
+}
+
+// ---------- Insights cache ----------
+
+export function loadInsights(): PostInsights[] {
+  ensureDir();
+  if (!fs.existsSync(INSIGHTS_FILE)) return [];
+  try {
+    return JSON.parse(fs.readFileSync(INSIGHTS_FILE, 'utf-8'));
+  } catch {
+    return [];
+  }
+}
+
+export function saveInsights(items: PostInsights[]): void {
+  ensureDir();
+  fs.writeFileSync(INSIGHTS_FILE, JSON.stringify(items, null, 2));
+}
+
+export function upsertInsight(insight: PostInsights): void {
+  const items = loadInsights();
+  const idx = items.findIndex((i) => i.postId === insight.postId);
+  if (idx === -1) items.push(insight);
+  else items[idx] = insight;
+  saveInsights(items);
+}
+
+export function getInsight(postId: string): PostInsights | undefined {
+  return loadInsights().find((i) => i.postId === postId);
 }

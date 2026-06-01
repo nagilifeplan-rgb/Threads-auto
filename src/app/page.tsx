@@ -6,6 +6,9 @@ import { PostList } from '@/components/PostList';
 import { SpreadsheetImport } from '@/components/SpreadsheetImport';
 import { NoteEditor } from '@/components/NoteEditor';
 import { Dashboard } from '@/components/Dashboard';
+import { Calendar } from '@/components/Calendar';
+import { Analytics } from '@/components/Analytics';
+import { NotificationCenter } from '@/components/NotificationCenter';
 import { ScheduledPost } from '@/types';
 
 interface AuthState {
@@ -13,13 +16,15 @@ interface AuthState {
   username?: string;
 }
 
-type Tab = 'dashboard' | 'notes' | 'schedule' | 'spreadsheet' | 'history';
+type Tab = 'dashboard' | 'calendar' | 'notes' | 'schedule' | 'spreadsheet' | 'analytics' | 'history';
 
 const TABS: { key: Tab; label: string; requireAuth?: boolean }[] = [
-  { key: 'dashboard',   label: '🏠 ダッシュボード' },
+  { key: 'dashboard',   label: '🏠 ホーム' },
+  { key: 'calendar',    label: '📅 カレンダー' },
   { key: 'notes',       label: '📝 note記事' },
   { key: 'schedule',    label: '✏️ Threads', requireAuth: true },
   { key: 'spreadsheet', label: '📊 一括', requireAuth: true },
+  { key: 'analytics',   label: '📈 分析', requireAuth: true },
   { key: 'history',     label: '📋 履歴', requireAuth: true },
 ];
 
@@ -89,21 +94,26 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
       {/* ── Header ── */}
-      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-gray-200">
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+      <header className="sticky top-0 z-20 bg-white/80 backdrop-blur border-b border-gray-200">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between relative">
+          <div className="flex items-center gap-2 min-w-0">
             <span className="text-2xl">🪄</span>
-            <div>
-              <h1 className="text-base font-bold text-gray-900">note × Threads マネージャー</h1>
-              <p className="text-xs text-gray-500">記事執筆 → AI変換 → 自動投稿</p>
+            <div className="min-w-0">
+              <h1 className="text-base font-bold text-gray-900 truncate">note × Threads マネージャー</h1>
+              <p className="text-xs text-gray-500 truncate">記事執筆 → AI変換 → 自動投稿</p>
             </div>
           </div>
-          {auth.connected && (
-            <div className="flex items-center gap-1 text-xs text-green-600 bg-green-50 border border-green-200 rounded-full px-3 py-1">
-              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block" />
-              稼働中
-            </div>
-          )}
+          <div className="flex items-center gap-2 shrink-0">
+            {auth.connected && (
+              <div className="hidden sm:flex items-center gap-1 text-xs text-green-600 bg-green-50 border border-green-200 rounded-full px-3 py-1">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block" />
+                稼働中
+              </div>
+            )}
+            <NotificationCenter
+              onNewNotification={() => fetchPosts()}
+            />
+          </div>
         </div>
       </header>
 
@@ -142,7 +152,13 @@ export default function Home() {
             onGoNotes={() => setActiveTab('notes')}
             onGoSchedule={() => setActiveTab('schedule')}
             onGoHistory={() => setActiveTab('history')}
+            onGoCalendar={() => setActiveTab('calendar')}
+            onGoAnalytics={() => setActiveTab('analytics')}
           />
+        )}
+
+        {activeTab === 'calendar' && (
+          <Calendar posts={posts} onCancel={handleCancel} />
         )}
 
         {activeTab === 'notes' && (
@@ -150,6 +166,10 @@ export default function Home() {
             threadsConnected={auth.connected}
             onScheduled={() => { fetchPosts(); }}
           />
+        )}
+
+        {activeTab === 'analytics' && auth.connected && (
+          <Analytics posts={posts} threadsConnected={auth.connected} />
         )}
 
         {activeTab === 'schedule' && auth.connected && (

@@ -39,6 +39,32 @@ export interface ParsedSpreadsheet {
   errorCount: number;
 }
 
+// ---- Notifications ----
+
+export interface AppNotification {
+  id: string;
+  type: 'success' | 'error' | 'info';
+  title: string;
+  message: string;
+  relatedPostId?: string;
+  read: boolean;
+  createdAt: string;
+}
+
+// ---- Performance insights cache ----
+
+export interface PostInsights {
+  postId: string;          // ScheduledPost.id
+  threadId: string;        // Threads post ID
+  views?: number;
+  likes?: number;
+  replies?: number;
+  reposts?: number;
+  quotes?: number;
+  shares?: number;
+  fetchedAt: string;
+}
+
 // ---- Note article (下書き) ----
 
 /** note記事の下書き。実投稿はnoteエディタにコピーして手動で行う */

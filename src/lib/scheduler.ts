@@ -1,9 +1,11 @@
 /**
  * In-process scheduler using setInterval (runs while the Next.js server is up).
- * Every minute it checks for pending posts whose scheduledAt has passed.
+ * Every 30 seconds it checks for pending posts whose scheduledAt has passed,
+ * publishes them to Threads, and creates a notification record.
  */
-import { loadPosts, updatePost, loadConfig } from './store';
+import { loadPosts, updatePost, loadConfig, addNotification } from './store';
 import { postToThreads } from './threads';
+import { v4 as uuidv4 } from 'uuid';
 
 let schedulerStarted = false;
 
@@ -35,10 +37,32 @@ export function startScheduler() {
           );
           updatePost(post.id, { status: 'posted', threadId: result.id });
           console.log(`[Scheduler] Posted successfully. Thread ID: ${result.id}`);
+
+          // 🔔 通知を保存
+          addNotification({
+            id: uuidv4(),
+            type: 'success',
+            title: '✅ 投稿が完了しました',
+            message: post.content.slice(0, 80) + (post.content.length > 80 ? '…' : ''),
+            relatedPostId: post.id,
+            read: false,
+            createdAt: new Date().toISOString(),
+          });
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : String(err);
           updatePost(post.id, { status: 'failed', errorMessage: msg });
           console.error(`[Scheduler] Failed to post ${post.id}: ${msg}`);
+
+          // 🔔 失敗通知
+          addNotification({
+            id: uuidv4(),
+            type: 'error',
+            title: '❌ 投稿に失敗しました',
+            message: `${post.content.slice(0, 50)}… (${msg.slice(0, 80)})`,
+            relatedPostId: post.id,
+            read: false,
+            createdAt: new Date().toISOString(),
+          });
         }
       }
     } catch (err) {

@@ -12,6 +12,8 @@ interface Props {
   onGoNotes: () => void;
   onGoSchedule: () => void;
   onGoHistory: () => void;
+  onGoCalendar?: () => void;
+  onGoAnalytics?: () => void;
 }
 
 function fmt(iso: string) {
@@ -29,6 +31,8 @@ export function Dashboard({
   onGoNotes,
   onGoSchedule,
   onGoHistory,
+  onGoCalendar,
+  onGoAnalytics,
 }: Props) {
   const [notes, setNotes] = useState<NoteArticle[]>([]);
 
@@ -266,6 +270,26 @@ export function Dashboard({
             <p className="text-sm font-semibold">Threads投稿を予約</p>
             <p className="text-xs opacity-80 mt-1">スケジュール登録</p>
           </button>
+          {onGoCalendar && (
+            <button
+              onClick={onGoCalendar}
+              className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white rounded-xl p-4 text-left hover:opacity-90 transition"
+            >
+              <p className="text-2xl mb-1">📅</p>
+              <p className="text-sm font-semibold">カレンダー表示</p>
+              <p className="text-xs opacity-80 mt-1">投稿予定を可視化</p>
+            </button>
+          )}
+          {onGoAnalytics && threadsConnected && (
+            <button
+              onClick={onGoAnalytics}
+              className="bg-gradient-to-br from-orange-500 to-red-500 text-white rounded-xl p-4 text-left hover:opacity-90 transition"
+            >
+              <p className="text-2xl mb-1">📈</p>
+              <p className="text-sm font-semibold">パフォーマンス分析</p>
+              <p className="text-xs opacity-80 mt-1">いいね/閲覧/返信</p>
+            </button>
+          )}
         </div>
       </div>
     </div>

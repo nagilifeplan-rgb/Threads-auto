@@ -5,6 +5,12 @@ const nextConfig: NextConfig = {
   serverExternalPackages: [],
   // Disable static optimization for API routes that use fs
   experimental: {},
+  // Allow Genspark sandbox domains as dev origins
+  allowedDevOrigins: [
+    '*.sandbox.novita.ai',
+    '*.e2b.dev',
+    '*.genspark.ai',
+  ],
 };
 
 export default nextConfig;
