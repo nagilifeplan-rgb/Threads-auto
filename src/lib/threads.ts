@@ -75,6 +75,51 @@ export async function postToThreads(
 }
 
 /**
+ * Insights metrics returned by Threads media insights endpoint.
+ * Docs: https://developers.facebook.com/docs/threads/insights
+ */
+export interface ThreadsInsights {
+  views?: number;
+  likes?: number;
+  replies?: number;
+  reposts?: number;
+  quotes?: number;
+  shares?: number;
+}
+
+/**
+ * Fetch insights for a single posted Thread.
+ * Returns metric → value map. Newly posted threads may take a few minutes
+ * before insights are available; missing metrics simply return 0.
+ */
+export async function getThreadInsights(
+  accessToken: string,
+  threadId: string
+): Promise<ThreadsInsights> {
+  const metrics = ['views', 'likes', 'replies', 'reposts', 'quotes', 'shares'].join(',');
+  const url = `${API_BASE}/${threadId}/insights?metric=${metrics}&access_token=${encodeURIComponent(
+    accessToken
+  )}`;
+
+  const res = await fetch(url);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(`Insights fetch failed: ${res.status} – ${JSON.stringify(err)}`);
+  }
+
+  const json = (await res.json()) as {
+    data?: { name: string; values?: { value?: number }[] }[];
+  };
+
+  const result: ThreadsInsights = {};
+  for (const item of json.data ?? []) {
+    const v = item.values?.[0]?.value ?? 0;
+    (result as Record<string, number>)[item.name] = v;
+  }
+  return result;
+}
+
+/**
  * Verify token and fetch basic profile info
  */
 export async function getThreadsProfile(accessToken: string) {
